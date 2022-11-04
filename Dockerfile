@@ -1,18 +1,21 @@
 ## NOTE: to retain configuration; mount a Docker volume, or use a bind-mount, on /var/lib/zerotier-one
 
-FROM debian:buster-slim as builder
+FROM debian:bullseye-slim as builder
 
 ## Supports x86_64, x86, arm, and arm64
 
-RUN apt-get update && apt-get install -y curl gnupg
-RUN apt-key adv --keyserver pgp.mit.edu --recv-keys 0x1657198823e52a61  && \
-    echo "deb http://download.zerotier.com/debian/buster buster main" > /etc/apt/sources.list.d/zerotier.list
+RUN apt-get update && apt-get install -y curl
+RUN curl -s "https://raw.githubusercontent.com/zerotier/ZeroTierOne/master/doc/contact%40zerotier.com.gpg" > /etc/apt/trusted.gpg.d/zerotier.asc && \
+    echo "deb https://download.zerotier.com/debian/bullseye bullseye main" > /etc/apt/sources.list.d/zerotier.list
 RUN apt-get update && apt-get install -y zerotier-one
-COPY ext/installfiles/linux/zerotier-container/main.sh /var/lib/zerotier-one/main.sh
+COPY main.sh /var/lib/zerotier-one/main.sh
 
-FROM debian:buster-slim
+FROM frolvlad/alpine-glibc:alpine-3.14_glibc-2.33
+
 LABEL version="latest"
 LABEL description="Containerized ZeroTier One for use on CoreOS or other Docker-only Linux hosts."
+
+RUN apk add --update libstdc++
 
 # ZeroTier relies on UDP port 9993
 EXPOSE 9993/udp
